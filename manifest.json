@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Bernasfera",
+  "version": "1.0",
+  "description": "A simple esfer@ utils",
+  "icons": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+  },
+  "action": {
+      "default_title": "Read text",
+      "default_icon": {
+          "16": "icon.png",
+          "48": "icon.png",
+          "128": "icon.png"
+      },
+      "default_popup": "popup.html"
+  },
+  "content_security_policy": "script-src 'self' https://ajax.googleapis.com https://cdn.jsdelivr.net; object-src 'self';",
+  "permissions": ["activeTab", "scripting"],
+  "background": {
+      "service_worker": "background.js"
+  }
+}
