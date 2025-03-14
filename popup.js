@@ -109,16 +109,19 @@ function setUserNotes(jsonText) {
         console.log("======");
         console.log(value);
         select = document.getElementById(modCode + "_" + raCode)
-       
-        console.log(select);
-        let optionExists = Array.from(select.options).some(option => option.value === value);
-        console.log(optionExists);
-        if (optionExists /* && !select.value*/) {
-          console.log("entra");
-          select.value = value;
-          event = new Event('change');
-          select.dispatchEvent(event);
-        }    
+        
+        if (select){
+          console.log(select);
+          let optionExists = Array.from(select.options).some(option => option.value === value);
+          console.log(optionExists);
+          if (optionExists /* && !select.value*/) {
+            console.log("entra");
+            select.value = value;
+            event = new Event('change');
+            select.dispatchEvent(event);
+          }    
+        }
+        
 
 
       });
