@@ -1,0 +1,23 @@
+html {
+    color: #FFF;
+    height: 400px;
+    width: 500px;
+    background: radial-gradient(ellipse at bottom, #181f2c 0%, #181f2c 100%);
+    overflow: hidden;
+}
+
+body {
+    height: 400px;
+    width: 500px;
+    overflow: hidden;
+}
+
+.btn {
+    border: none;
+    cursor: pointer;
+    line-height: 1.7;
+    padding: 1em 3em;
+    letter-spacing: 0.05rem;
+    color: #ffffff;
+    background-color: rgba(0, 0, 0, 0.1);
+}

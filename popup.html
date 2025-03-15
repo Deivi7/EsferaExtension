@@ -1,19 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Modificar Select</title>
+  <meta charset="utf-8">
+  <title>Notes esfer@</title>
+  <link rel="stylesheet" href="styles.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="bootstrap.min.js"></script>
 </head>
 <body class="p-3">
-  <h3 class="text-center">Modificar Select</h3>
-  <button class="btn btn-primary w-100 my-2" id="pendingBtn">Establecer Pendiente <input type="checkbox" id="forcePending"></button>
-  <button class="btn btn-secondary w-100 my-2" id="processBtn">Establecer En Proceso <input type="checkbox" id="forceProcess"></button>
-  
-  
+  <h3 class="text-center">Notes esfer@</h3>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <button class="btn btn-primary flex-grow-1 me-2" id="pendingBtn">Tots com pendent</button>
+    <div>
+      <input type="checkbox" id="forcePending">
+      <label for="forcePending">Forçar</label>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <button class="btn btn-secondary flex-grow-1 me-2" id="processBtn">Tots en proces</button>
+    <div>
+      <input type="checkbox" id="forceProcess">
+      <label for="forceProcess">Forçar</label>
+    </div>
+  </div>
+
   <textarea id="userNotesText" class="form-control" rows="4"></textarea>
-  <button class="btn btn-success w-100 mt-2" id="setUserNotes">Establecer Notas de Usuario</button>
- 
+
+  <div class="d-flex mt-2">
+    <button class="btn btn-success w-50 me-1" id="setUserNotes">Notes d'usuari</button>
+    <button class="btn btn-danger w-50 ms-1" id="clearNotes">Notes per RA</button>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
