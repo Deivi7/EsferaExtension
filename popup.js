@@ -180,7 +180,7 @@ function setUserNotes(jsonText, studentCode, force) {
 
             input = document.getElementById("i_" + modCode + "_" + raCode)
             
-            if(input  && force){
+            if(input && ( !input.value || force)){
               input.value = nota;
               event = new Event('change');
               input.dispatchEvent(event);
