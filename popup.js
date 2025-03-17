@@ -103,7 +103,7 @@ function getJsonText() {
 
 
 function setUserNotes(jsonText, studentCode, force) {
-  let changeDisabled = true;
+  let changeDisabled = false;
 
   let jsonData;
   try {
@@ -138,7 +138,7 @@ function setUserNotes(jsonText, studentCode, force) {
     const { mod: modCode, ra: raCode, nota } = entry;
 
     select = document.getElementById(modCode + "_" + raCode);
-    if( select!=null && select.hasAttribute("disabled") && !changeDisabled ) return;
+    if( select != null && select.hasAttribute("disabled") && !changeDisabled ) return;
     if(!select || select==null) return;
 
     let value = nota === "" ? (raCode === "T" ? "string:PQ" : "string:PDT") :
@@ -146,12 +146,12 @@ function setUserNotes(jsonText, studentCode, force) {
                 nota === "P" ? "string:EP" :
                 nota < 5 ? "string:NA" : `string:A${nota}`;
                 
-
-
+    
+    let isEdiableSelect = !select.value || select.value == 'string:EP' || select.value == 'string:PDT';
     if (nota != "" && raCode == "T") {
 
       let optionExists = Array.from(select.options).some(option => option.value === value);
-      if (optionExists && ( !select.value || force)) {
+      if (optionExists && ( isEdiableSelect || force) ) {
         select.value = value;
         select.dispatchEvent(new Event('change'));
       }   
@@ -164,6 +164,13 @@ function setUserNotes(jsonText, studentCode, force) {
       }
       
     }else if( raCode == "T" ){
+
+      if (( isEdiableSelect || force) ) {
+        select.value = "string:PQ";
+        select.dispatchEvent(new Event('change'));
+      }   
+
+      input = document.getElementById("i_" + modCode + "_" + raCode)
    
       input = document.getElementById("i_" + modCode + "_" + raCode)
       if(input  &&  force){
@@ -171,13 +178,13 @@ function setUserNotes(jsonText, studentCode, force) {
         input.dispatchEvent(new Event('change'));
       }
     }else{
-      console.log(modCode, raCode, nota, value);
+      // console.log(modCode, raCode, nota, value);
 
       let optionExists = Array.from(select.options).some(option => option.value === value);
-      if (optionExists && ( !select.value || force)) {
+      if (optionExists && ( isEdiableSelect|| force)) {
         select.value = value;
         select.dispatchEvent(new Event('change'));
-      }    
+      } 
     }
   });
   
@@ -192,7 +199,7 @@ function setRANotes(studentCode) {
 
 
 function modifySelect(state, force) {
-  let changeDisabled = true;
+  let changeDisabled = false;
 
 
   const table = document.querySelector('table[data-st-table="qualificacions"]');
