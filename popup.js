@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       studentName = name;
       document.getElementById("idaluesfera").textContent = `IdAlu: ${studentCode}`;
       document.getElementById("nomesfera").textContent = `Nom: ${studentName}`;
-
     }
   });
 
@@ -104,6 +103,7 @@ function getJsonText() {
 
 
 function setUserNotes(jsonText, studentCode, force) {
+  let changeDisabled = true;
 
   let jsonData;
   try {
@@ -112,145 +112,115 @@ function setUserNotes(jsonText, studentCode, force) {
     return "Error en analitzar el JSON. Assegura't que estigui en el format correcte.";
   }
   
-  const student = jsonData.find(al => al.idalu == studentCode);
-  if (!student) {
-      return "Alumne no trobat";
-  }
-  
   const table = document.querySelector('table[data-st-table="qualificacions"]');
-  let select;
-  let event;
-  let input
+  if (!table) return "Error a llegir la informació de l'Esfer@";
 
-  if (table) {
-    
-      table.querySelectorAll("tr").forEach(tr => {
-        const tds = tr.querySelectorAll("td");
+  const student = jsonData.find(al => al.idalu == studentCode);
+  if (!student) return "Alumne no trobat";
+
+  table.querySelectorAll("tr").forEach(tr => {
+      let tds = tr.querySelectorAll("td");
+      if(tds.length<5) return;
       
-        if (tds.length > 1) {
-          // tds[0].classList.add("bg-danger", "text-white"); 
-          // tds[1].classList.add("bg-primary", "text-white"); // Fondo azul, texto blanco
-          select = tds[3].querySelector('select');
-          input = tds[3].querySelector('input');
-          
-          let parts = tds[0].textContent.trim().split("_");
-          let moduleCode = parts[0];
-          let raCode = parts.length > 2 ? parts[2] : "T";
-          select.id = moduleCode + "_" + raCode;
-          if(input){
-            input.id = "i_"+moduleCode + "_T";
-          }
-        }
-      });
-  
-      student.notes.forEach((entry) => {
+      let parts = tds[0].textContent.trim().split("_");
+      let moduleCode = parts[0];
+      let raCode = parts.length > 2 ? parts[2] : "T";
 
-        const modCode = entry.mod;
-        const raCode = entry.ra;
-        const nota = entry.nota;
-
-        let value="";
-        if (nota === "" && raCode =="T") {
-          value = "string:PQ";
-        } else if (nota != "" && raCode == "T") {
-          value = "";
-        } else if (nota === "") {
-          value = "string:PDT";
-        } else if (nota === "P") {
-          value = "string:EP";
-        } else if (nota < 5) {
-          value = "string:NA";
-        } else {
-          value = "string:A"+nota;
-        }
-        
-        select = document.getElementById(modCode + "_" + raCode);
-        let selectIsDisabled = select && false; //TODO Mirar si select esta desabilitat
-
-        if(select && !selectIsDisabled){
-    
-          if (nota != "" && raCode == "T") {
-
-            let optionExists = Array.from(select.options).some(option => option.value === value);
-            if (optionExists && ( !select.value || force)) {
-              select.value = value;
-              event = new Event('change');
-              select.dispatchEvent(event);
-            }   
-
-            input = document.getElementById("i_" + modCode + "_" + raCode)
-            
-            if(input && ( !input.value || force)){
-              input.value = nota;
-              event = new Event('change');
-              input.dispatchEvent(event);
-            }
-            
-          }else if( raCode == "T" ){
-            input = document.getElementById("i_" + modCode + "_" + raCode)
-            if(input  &&  force){
-              input.value = "";
-              event = new Event('change');
-              input.dispatchEvent(event);
-            }
-          }else if (select){
-            let optionExists = Array.from(select.options).some(option => option.value === value);
-            if (optionExists && ( !select.value || force)) {
-              select.value = value;
-              event = new Event('change');
-              select.dispatchEvent(event);
-            }    
-          }
-
-        }
-
-      });
+      let select = tds[3].querySelector('select');
+      let input = tds[3].querySelector('input');
       
-      return "Notes de l'alumne "+ student.nomalu +" assignades";
+      if (select) select.id = moduleCode + "_" + raCode;
+      if(input) input.id = "i_"+moduleCode + "_T";
+      
+  });
+
+  student.notes.forEach((entry) => {
+    const { mod: modCode, ra: raCode, nota } = entry;
+
+    select = document.getElementById(modCode + "_" + raCode);
+    if( select!=null && select.hasAttribute("disabled") && !changeDisabled ) return;
+    if(!select || select==null) return;
+
+    let value = nota === "" ? (raCode === "T" ? "string:PQ" : "string:PDT") :
+                raCode === "T" ? "" :
+                nota === "P" ? "string:EP" :
+                nota < 5 ? "string:NA" : `string:A${nota}`;
+                
+
+
+    if (nota != "" && raCode == "T") {
+
+      let optionExists = Array.from(select.options).some(option => option.value === value);
+      if (optionExists && ( !select.value || force)) {
+        select.value = value;
+        select.dispatchEvent(new Event('change'));
+      }   
+
+      input = document.getElementById("i_" + modCode + "_" + raCode)
+      
+      if(input && ( !input.value || force)){
+        input.value = nota;
+        input.dispatchEvent(new Event('change'));
+      }
+      
+    }else if( raCode == "T" ){
+   
+      input = document.getElementById("i_" + modCode + "_" + raCode)
+      if(input  &&  force){
+        select.value = value;
+        input.dispatchEvent(new Event('change'));
+      }
+    }else{
+      console.log(modCode, raCode, nota, value);
+
+      let optionExists = Array.from(select.options).some(option => option.value === value);
+      if (optionExists && ( !select.value || force)) {
+        select.value = value;
+        select.dispatchEvent(new Event('change'));
+      }    
     }
-    return "Error a llegir la informació de l'Esfer@";
+  });
+  
+  return "Notes de l'alumne "+ student.nomalu +" assignades";
     
 };
 
 
 function setRANotes(studentCode) {
-
   alert(studentCode);
-        
 };
 
 
 function modifySelect(state, force) {
+  let changeDisabled = true;
+
+
   const table = document.querySelector('table[data-st-table="qualificacions"]');
   if (!table) {
     alert("No s'ha trobat la taula de qualificacions");
-    return
+    return;
   }
 
   let selects = table.querySelectorAll("select"); /**:not([disabled]) */
 
   selects.forEach(select => {
+      if(select!=null && select.hasAttribute("disabled") && !changeDisabled) return;
 
-    //TODO Mirar si select esta desabilitat
       let optionExists = Array.from(select.options).some(option => option.value === state);
-      let event;
+
       if (optionExists  && ( !select.value || force) ) {
           select.value = state;
-          event = new Event('change');
-          select.dispatchEvent(event);
+          select.dispatchEvent(new Event('change'));
       }
 
-   
       optionExists = Array.from(select.options).some(option => option.value === "string:PQ");
       let input = select.parentElement.querySelector("input");
       let hasQualification = input && input.value && input.value != "";
 
       //Possara pendent si no te nota, exeptuant si es força
       if (optionExists && ( (!select.value && !hasQualification) || force) ) {
-
           select.value = "string:PQ";
-          event = new Event('change');
-          select.dispatchEvent(event);
+          select.dispatchEvent(new Event('change'));
       }
   });
         
@@ -265,4 +235,3 @@ function extractStudentInfo() {
   const [code, name] = lastItemText.split(' - ');
   return { code, name };
 }
-
