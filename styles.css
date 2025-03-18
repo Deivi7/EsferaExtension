@@ -1,23 +1,58 @@
 html {
     color: #FFF;
-    height: 500px;
-    width: 300px;
-    background: radial-gradient(ellipse at bottom, #181f2c 0%, #181f2c 100%);
+    height: 160px;
+    width: 400px;
     overflow: hidden;
+    font-size: 0.7rem;
 }
 
 body {
-    height: 500px;
-    width: 300px;
+    height: 160px;
     overflow: hidden;
 }
+.text-primary{
+    font-size: 1.5rem;
+}
+.container-custom {
 
-.btn {
-    border: none;
-    cursor: pointer;
-    line-height: 1.7;
-    padding: 1em 3em;
-    letter-spacing: 0.05rem;
-    color: #ffffff;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+.header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 5px;
+    align-items: baseline;
+}
+.content {
+    display: flex;
+    gap: 0px;
+}
+.column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.btn-custom {
+    width: 120px;
+    display: flex;
+    align-items: center;
+}
+.text-area {
+    width: 100%;
+    height: 65px;
+}
+.checkbox-container {
+    display: flex;
+    align-items: center;
+}
+.checkbox-container label {
+    margin-left: 5px;
+}
+.checkbox-container input {
+    margin-left: 10px;
 }
