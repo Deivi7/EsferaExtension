@@ -1,50 +1,64 @@
+
+const changeDisabled = true;
+
 let studentCode = "";
 let studentName = "";
 
 let codeModule = "";
 let codeRA = "";
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", initExtension);
 
+async function initExtension() {
+  const tab = await getActiveTab();
+  cargarNotasUsuario();
+  extraerInformacionDesdeEsfera(tab.id);
+  generarAvaluacions(); 
+}
 
+async function getActiveTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab;
+}
 
-
-  
-  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
+function cargarNotasUsuario() {
   chrome.storage.local.get(["notes"], (result) => {
-    savedData = result.notes || "";
+    const savedData = result.notes || "";
     document.getElementById("userNotesText").value = savedData;
   });
+}
 
+function extraerInformacionDesdeEsfera(tabId) {
   chrome.scripting.executeScript({
-    target: { tabId: tab.id },
+    target: { tabId },
     function: extractInfoEsfera
-  }, (results) => {
-   
-    if (results && results[0] && results[0].result) {
-      const { type} = results[0].result;
-      if(type == 'RA'){
-        const {moduleCode, raCode} = results[0].result;
-        codeModule = moduleCode;
-        codeRA = raCode;
-        document.getElementById("info").innerHTML = `<strong>Mòdul</strong>: ${codeModule} - ${codeRA}`;
-        document.getElementById("viewBtnUserNotes").style.display = "none";
-        document.getElementById("viewBtnRANotes").style.display = "flex";
-      }else if(type == 'ST'){
-        const {idalu,  nom} = results[0].result;
-        studentCode = idalu;
-        studentName = nom;
-        document.getElementById("info").innerHTML = `<strong>Nom:</strong> ${studentName} - <strong>IdAlu:</strong> ${studentCode}`;
-        document.getElementById("viewBtnUserNotes").style.display = "flex";
-        document.getElementById("viewBtnRANotes").style.display = "none";
-      }
-    }
-  });
+  }, manejarResultadosEsfera);
+}
 
-  generarAvaluacions();
+function mostrarInfoRA({ moduleCode, raCode }) {
+  codeModule = moduleCode;
+  codeRA = raCode;
+  document.getElementById("info").innerHTML = `<strong>Mòdul</strong>: ${codeModule} - ${codeRA}`;
+  document.getElementById("viewBtnUserNotes").style.display = "none";
+  document.getElementById("viewBtnRANotes").style.display = "flex";
+}
 
-});
+// 🧑‍🎓 Muestra info de l'estudiant
+function mostrarInfoEstudiant({ idalu, nom }) {
+  studentCode = idalu;
+  studentName = nom;
+  document.getElementById("info").innerHTML = `<strong>Nom:</strong> ${studentName} - <strong>IdAlu:</strong> ${studentCode}`;
+  document.getElementById("viewBtnUserNotes").style.display = "flex";
+  document.getElementById("viewBtnRANotes").style.display = "none";
+}
+
+function manejarResultadosEsfera(results) {
+  if (!results || !results[0] || !results[0].result) return;
+  const data = results[0].result;
+
+  if (data.type === "RA") {mostrarInfoRA(data);
+  } else if (data.type === "ST") {mostrarInfoEstudiant(data);}
+}
 
 document.getElementById("clearButton").addEventListener("click", () => {
   document.getElementById("userNotesText").value = "";
@@ -62,45 +76,64 @@ document.getElementById("userNotesText").addEventListener("input", () => {
 });
 
 
+document.getElementById("pendingBtn").addEventListener("click", async() => {
 
-document.getElementById("pendingBtn").addEventListener("click", () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      function: modifySelect,
-      args : [ "string:PDT", getForcePending() ]
-    });
-  });
-});
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-document.getElementById("processBtn").addEventListener("click", () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id },
-      function: modifySelect,
-      args : [ "string:EP", getForceProcess() ]
-    });
-  });
-});
-
-document.getElementById("setUserNotes").addEventListener("click", () => {
-
-  let forceUserNotes = document.getElementById("forceUserNotes").checked;
-
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.scripting.executeScript({
-      target: { tabId: tabs[0].id, },
-      function: setUserNotes,
-      args : [ getJsonText(), studentCode, forceUserNotes ],
-    }, (results) => {
-     
-      if (results && results[0] && results[0].result) {
-        document.getElementById("results").textContent = results[0].result;
-      }
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ["setselects.js"]
+  }).then(() => {
+      chrome.tabs.sendMessage(tab.id, { state: "string:PDT", force: getForcePending(), changeDisabled:changeDisabled }, (response) => {
+      document.getElementById("results").textContent = response.resultado;
+      });
     }
-  );
+  ).catch(err => {
+    console.error("Error:", err);
   });
 });
+
+document.getElementById("processBtn").addEventListener("click", async() => {
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ["setselects.js"]
+  }).then(() => {
+      chrome.tabs.sendMessage(tab.id, { state: "string:EP", force: getForceProcess(), changeDisabled:changeDisabled }, (response) => {
+      document.getElementById("results").textContent = response.resultado;
+      });
+    }
+  ).catch(err => {
+    console.error("Error:", err);
+  });
+});
+
+
+document.getElementById("setUserNotes").addEventListener("click", async() => {
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ["setuserqualifications.js"]
+  }).then(() => {
+  
+      chrome.tabs.sendMessage(tab.id, { jsonText: getJsonText(), 
+                                        studentCode:studentCode, 
+                                        force: getForceUserQualifications(), 
+                                        changeDisabled:changeDisabled, 
+                                        av: getAv() 
+      }, (response) => {
+        document.getElementById("results").textContent = response.resultado;
+      });
+    }
+  ).catch(err => {
+    console.error("Error:", err);
+  });
+});
+
 
 document.getElementById("setRANotes").addEventListener("click", () => {
   let forceRANotes = document.getElementById("forceRANotes").checked;
@@ -118,129 +151,21 @@ function getForcePending() {
   return  document.getElementById("forcePending").checked;
 }
 
+function getForceUserQualifications() { 
+  return  document.getElementById("forceUserNotes").checked;
+}
+
 function getForceProcess() { 
   return  document.getElementById("forceProcess").checked;
+}
+
+function getAv() { 
+  return  document.getElementById("evaluation").value;
 }
 
 function getJsonText() { 
   return  document.getElementById("userNotesText").value;
 }
-
-
-async function setUserNotes(jsonText, studentCode, force) {
-
- 
-
-  let changeDisabled = true;
-
-  let jsonData;
-  try {
-     jsonData = JSON.parse(jsonText); // Parseamos el JSON
-  } catch (error) {
-    return "Error en analitzar el JSON. Assegura't que estigui en el format correcte.";
-  }
-  
-  const table = document.querySelector('table[data-st-table="qualificacions"]');
-  if (!table) return "Error a llegir la informació de l'Esfer@";
-
-  const student = jsonData.find(al => al.idalu == studentCode);
-  if (!student) return "Alumne no trobat";
-
-  //Escriure comentaris
-  let allComments = '';
-  student.notes.forEach((entry) => {
-    const { av:av, mod:moduleCode, ra: raCode, comment: comment } = entry;
-   if (comment && comment.trim() !== '') {
-      allComments += `Mòdul: ${moduleCode} ${raCode}: ${comment}\n`;  // Añadir salto de línea entre comentarios
-    }
-  });
-  
-  document.querySelector('a[data-ng-click^="showCommentsModal()"]').click(); //Hacer clic
-  // document.querySelector('a[data-ng-click^="canviAlumne(\'next\')"]').click(); //Hacer clic
-
-  let textarea_commnet = document.querySelector('textarea[data-ng-model^="comentariGeneral.comentari"]').value = allComments;
-  //textarea_commnet.dispatchEvent(new Event('change'));
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  //El seu treball és satisfactori 
-  document.querySelector('a[data-ng-click^="saveComentariGeneral()"]').click(); //Hacer clic en desar
-
- 
-
-  return;
-
-
-  table.querySelectorAll("tr").forEach(tr => {
-      let tds = tr.querySelectorAll("td");
-      if(tds.length<5) return;
-      
-      let parts = tds[0].textContent.trim().split("_");
-      let moduleCode = parts[0];
-      let raCode = parts.length > 2 ? parts[2] : "T";
-
-      let select = tds[3].querySelector('select');
-      let input = tds[3].querySelector('input');
-      
-      if (select) select.id = moduleCode + "_" + raCode;
-      if(input) input.id = "i_"+moduleCode + "_T";
-      
-  });
-
-  student.notes.forEach((entry) => {
-    const { mod: modCode, ra: raCode, nota } = entry;
-
-    select = document.getElementById(modCode + "_" + raCode);
-    if( select != null && select.hasAttribute("disabled") && !changeDisabled ) return;
-    if(!select || select==null) return;
-
-    let value = nota === "" ? (raCode === "T" ? "string:PQ" : "string:PDT") :
-                raCode === "T" ? "" :
-                nota === "P" ? "string:EP" :
-                nota < 5 ? "string:NA" : `string:A${nota}`;
-                
-    
-    let isEdiableSelect = !select.value || select.value == 'string:EP' || select.value == 'string:PDT';
-    if (nota != "" && raCode == "T") {
-
-      let optionExists = Array.from(select.options).some(option => option.value === value);
-      if (optionExists && ( isEdiableSelect || force) ) {
-        select.value = value;
-        select.dispatchEvent(new Event('change'));
-      }   
-
-      input = document.getElementById("i_" + modCode + "_" + raCode)
-      
-      if(input && ( !input.value || force)){
-        input.value = nota;
-        input.dispatchEvent(new Event('change'));
-      }
-      
-    }else if( raCode == "T" ){
-
-      if (( isEdiableSelect || force) ) {
-        select.value = "string:PQ";
-        select.dispatchEvent(new Event('change'));
-      }   
-   
-      input = document.getElementById("i_" + modCode + "_" + raCode)
-      if(input  &&  force){
-        select.value = value;
-        input.dispatchEvent(new Event('change'));
-      }
-    }else{
-      // console.log(modCode, raCode, nota, value);
-
-      let optionExists = Array.from(select.options).some(option => option.value === value);
-      if (optionExists && ( isEdiableSelect|| force)) {
-        select.value = value;
-        select.dispatchEvent(new Event('change'));
-      } 
-    }
-  });
-  
-  return "Notes de l'alumne "+ student.nomalu +" assignades";
-    
-};
 
 
 function setRANotes(jsonText, codeModule, raCode, force) {
@@ -333,45 +258,6 @@ function setRANotes(jsonText, codeModule, raCode, force) {
   
 };
 
-function modifySelect(state, force) {
-
-  let changeDisabled = true;
-
-  let table = document.querySelector('table[data-st-table="qualificacions"]');
-  if (!table) {
-    table = document.querySelector('table[data-st-table="dummyStudents"]');
-  }
-
-  if (!table) {
-    alert("No s'ha trobat la taula de qualificacions");
-    return;
-  }
- 
-
-  let selects = table.querySelectorAll("select"); /**:not([disabled]) */
-
-  selects.forEach(select => {
-      if(select!=null && select.hasAttribute("disabled") && !changeDisabled) return;
-
-      let optionExists = Array.from(select.options).some(option => option.value === state);
-
-      if (optionExists  && ( !select.value || force) ) {
-          select.value = state;
-          select.dispatchEvent(new Event('change'));
-      }
-
-      optionExists = Array.from(select.options).some(option => option.value === "string:PQ");
-      let input = select.parentElement.querySelector("input");
-      let hasQualification = input && input.value && input.value != "";
-
-      //Possara pendent si no te nota, exeptuant si es força
-      if (optionExists && ( (!select.value && !hasQualification) || force) ) {
-          select.value = "string:PQ";
-          select.dispatchEvent(new Event('change'));
-      }
-  });
-        
-}
 
 function extractInfoEsfera() {
   
@@ -399,29 +285,6 @@ function extractInfoEsfera() {
   }
 }
 
-// function extractStudentInfo() {
-//   const breadcrumbItems = document.querySelectorAll('.breadcrumb-wrapper ol.breadcrumb li');
-//   const lastItem = breadcrumbItems[breadcrumbItems.length - 1];
-//   if (!lastItem) return "No trobat";
-
-//   const lastItemText = lastItem.textContent.trim();
-//   const [code, name] = lastItemText.split(' - ');
-//   return { code, name };
-// }
-
-// function extractRAInfo() {
-//   const breadcrumbItems = document.querySelectorAll('.breadcrumb-wrapper ol.breadcrumb li');
-//   const lastItem = breadcrumbItems[breadcrumbItems.length - 1];
-//   if (!lastItem) return "No trobat";
-
-//   const lastItemText = lastItem.textContent.trim();
-//   let parts = lastItemText.trim().split("_");
-//   let moduleCode = parts[0];
-//   let raCode = parts.length > 2 ? parts[2] : "T";
-
-//   return { moduleCode, raCode };
-// }
-
 function generarAvaluacions() {
   // Obtenim el mes actual
   const currentMonth = new Date().getMonth() + 1; // Els mesos van de 0 a 11, per això sumem 1
@@ -431,8 +294,8 @@ function generarAvaluacions() {
       { label: "Primera avaluació", value: 1 },
       { label: "Segona avaluació", value: 2 },
       { label: "Tercera avaluació", value: 3 },
-      { label: "Avaluació extraordinària", value: 4 },
-      { label: "Avaluació final", value: 5 }
+      { label: "Avaluació final", value: 4 },
+      { label: "Avaluació extraordinària", value: 5 }
   ];
 
   const selectElement = document.getElementById('evaluation');
