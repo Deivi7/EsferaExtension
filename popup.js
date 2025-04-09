@@ -5,6 +5,10 @@ let codeModule = "";
 let codeRA = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+
+
+
   
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -37,6 +41,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
   });
+
+  generarAvaluacions();
 
 });
 
@@ -121,9 +127,11 @@ function getJsonText() {
 }
 
 
-function setUserNotes(jsonText, studentCode, force) {
+async function setUserNotes(jsonText, studentCode, force) {
 
-  let changeDisabled = false;
+ 
+
+  let changeDisabled = true;
 
   let jsonData;
   try {
@@ -137,6 +145,30 @@ function setUserNotes(jsonText, studentCode, force) {
 
   const student = jsonData.find(al => al.idalu == studentCode);
   if (!student) return "Alumne no trobat";
+
+  //Escriure comentaris
+  let allComments = '';
+  student.notes.forEach((entry) => {
+    const { av:av, mod:moduleCode, ra: raCode, comment: comment } = entry;
+   if (comment && comment.trim() !== '') {
+      allComments += `Mòdul: ${moduleCode} ${raCode}: ${comment}\n`;  // Añadir salto de línea entre comentarios
+    }
+  });
+  
+  document.querySelector('a[data-ng-click^="showCommentsModal()"]').click(); //Hacer clic
+  // document.querySelector('a[data-ng-click^="canviAlumne(\'next\')"]').click(); //Hacer clic
+
+  let textarea_commnet = document.querySelector('textarea[data-ng-model^="comentariGeneral.comentari"]').value = allComments;
+  //textarea_commnet.dispatchEvent(new Event('change'));
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  //El seu treball és satisfactori 
+  document.querySelector('a[data-ng-click^="saveComentariGeneral()"]').click(); //Hacer clic en desar
+
+ 
+
+  return;
+
 
   table.querySelectorAll("tr").forEach(tr => {
       let tds = tr.querySelectorAll("td");
@@ -214,7 +246,7 @@ function setUserNotes(jsonText, studentCode, force) {
 function setRANotes(jsonText, codeModule, raCode, force) {
   //document.querySelector('a[data-ng-click^="canviAlumne(\'next\')"]').click(); //Hacer clic
   
-  let changeDisabled = false;
+  let changeDisabled = true;
 
   let jsonData;
   try {
@@ -301,9 +333,9 @@ function setRANotes(jsonText, codeModule, raCode, force) {
   
 };
 
-
 function modifySelect(state, force) {
-  let changeDisabled = false;
+
+  let changeDisabled = true;
 
   let table = document.querySelector('table[data-st-table="qualificacions"]');
   if (!table) {
@@ -389,3 +421,42 @@ function extractInfoEsfera() {
 
 //   return { moduleCode, raCode };
 // }
+
+function generarAvaluacions() {
+  // Obtenim el mes actual
+  const currentMonth = new Date().getMonth() + 1; // Els mesos van de 0 a 11, per això sumem 1
+
+  // Opcions de les avaluacions possibles
+  const evaluations = [
+      { label: "Primera avaluació", value: 1 },
+      { label: "Segona avaluació", value: 2 },
+      { label: "Tercera avaluació", value: 3 },
+      { label: "Avaluació extraordinària", value: 4 },
+      { label: "Avaluació final", value: 5 }
+  ];
+
+  const selectElement = document.getElementById('evaluation');
+
+  // Avaluació per defecte segons el mes actual
+  let defaultEvaluation = 1; // Valor per defecte (primera avaluació)
+  if (currentMonth >= 9 && currentMonth <= 11) {
+      defaultEvaluation = 1; // Primera avaluació (per exemple, setembre-novembre)
+  } else if (currentMonth >= 12 || currentMonth <= 2) {
+      defaultEvaluation = 2; // Segona avaluació (desembre-febrer)
+  } else if (currentMonth >= 3 && currentMonth <= 5) {
+      defaultEvaluation = 3; // Tercera avaluació (març-maig)
+  } else {
+      defaultEvaluation = 4; // Avaluació extraordinària (juny-agost)
+  }
+
+  // Afegir les opcions al select
+  evaluations.forEach((evaluation) => {
+      const option = document.createElement('option');
+      option.value = evaluation.value;
+      option.textContent = evaluation.label;
+      if (evaluation.value === defaultEvaluation) {
+          option.selected = true; // Marca l'opció per defecte
+      }
+      selectElement.appendChild(option);
+  });
+}
