@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", initExtension);
 
 async function initExtension() {
   const tab = await getActiveTab();
-  cargarNotasUsuario();
+  cargarInfoApp();
   extraerInformacionDesdeEsfera(tab.id);
   generarAvaluacions(); 
 }
@@ -21,10 +21,16 @@ async function getActiveTab() {
   return tab;
 }
 
-function cargarNotasUsuario() {
+function cargarInfoApp() {
+  let savedData="";
   chrome.storage.local.get(["notes"], (result) => {
-    const savedData = result.notes || "";
+    savedData = result.notes || "";
     document.getElementById("userNotesText").value = savedData;
+  });
+
+  chrome.storage.local.get(["av"], (result) => {
+    savedData = result.av;
+    document.getElementById("evaluation").value = savedData;
   });
 }
 
@@ -43,7 +49,6 @@ function mostrarInfoRA({ moduleCode, raCode }) {
   document.getElementById("viewBtnRANotes").style.display = "flex";
 }
 
-// 🧑‍🎓 Muestra info de l'estudiant
 function mostrarInfoEstudiant({ idalu, nom }) {
   studentCode = idalu;
   studentName = nom;
@@ -72,6 +77,16 @@ document.getElementById("userNotesText").addEventListener("input", () => {
   } catch (error) {
     alert(error);
     console.error("Error al guardar", error);
+  }
+});
+
+document.getElementById("evaluation").addEventListener("change", () => {
+  try {
+    savedData = document.getElementById("evaluation").value;
+    chrome.storage.local.set({ "av": savedData });
+  } catch (error) {
+    alert(error);
+    console.error("Error al Av", error);
   }
 });
 
@@ -119,7 +134,6 @@ document.getElementById("setUserNotes").addEventListener("click", async() => {
     target: { tabId: tab.id },
     files: ["setuserqualifications.js"]
   }).then(() => {
-  
       chrome.tabs.sendMessage(tab.id, { jsonText: getJsonText(), 
                                         studentCode:studentCode, 
                                         force: getForceUserQualifications(), 
@@ -291,33 +305,33 @@ function generarAvaluacions() {
 
   // Opcions de les avaluacions possibles
   const evaluations = [
+      { label: "Seleciona una avaluació", value: 0 },
       { label: "Primera avaluació", value: 1 },
       { label: "Segona avaluació", value: 2 },
-      { label: "Tercera avaluació", value: 3 },
-      { label: "Avaluació final", value: 4 },
-      { label: "Avaluació extraordinària", value: 5 }
+      { label: "Avaluació final", value: 3 },
+      { label: "Avaluació extraordinària", value: 4}
   ];
 
   const selectElement = document.getElementById('evaluation');
 
   // Avaluació per defecte segons el mes actual
-  let defaultEvaluation = 1; // Valor per defecte (primera avaluació)
-  if (currentMonth >= 9 && currentMonth <= 11) {
-      defaultEvaluation = 1; // Primera avaluació (per exemple, setembre-novembre)
-  } else if (currentMonth >= 12 || currentMonth <= 2) {
-      defaultEvaluation = 2; // Segona avaluació (desembre-febrer)
-  } else if (currentMonth >= 3 && currentMonth <= 5) {
-      defaultEvaluation = 3; // Tercera avaluació (març-maig)
-  } else {
-      defaultEvaluation = 4; // Avaluació extraordinària (juny-agost)
-  }
+  // let defaultEvaluation = 1; // Valor per defecte (primera avaluació)
+  // if (currentMonth >= 9 && currentMonth <= 11) {
+  //     defaultEvaluation = 1; // Primera avaluació (per exemple, setembre-novembre)
+  // } else if (currentMonth >= 12 || currentMonth <= 3) {
+  //     defaultEvaluation = 2; // Segona avaluació (desembre-març)
+  // } else if (currentMonth >= 4 && currentMonth <= 5) {
+  //     defaultEvaluation = 3; // Tercera avaluació (abril-maig)
+  // } else {
+  //     defaultEvaluation = 4; // Avaluació extraordinària (juny-agost)
+  // }
 
   // Afegir les opcions al select
   evaluations.forEach((evaluation) => {
       const option = document.createElement('option');
       option.value = evaluation.value;
       option.textContent = evaluation.label;
-      if (evaluation.value === defaultEvaluation) {
+      if (evaluation.value === 0) {
           option.selected = true; // Marca l'opció per defecte
       }
       selectElement.appendChild(option);

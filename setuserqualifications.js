@@ -6,7 +6,8 @@ if (!window.__listenerRegistradoUserQualificacions) {
 function handleMessage(message, sender, sendResponse) {
   console.log("UserQualificacions:", message);
   const { jsonText, studentCode, force, changeDisabled, av } = message;
-  setUserNotes(jsonText, studentCode, force, changeDisabled, av).then(resultado => sendResponse({ resultado }));
+  resultado = setUserNotes(jsonText, studentCode, force, changeDisabled, av);
+  sendResponse({ resultado });
   return true; // Necesario para respuestas async
 }
 
@@ -55,7 +56,7 @@ async function aplicarComentaris(notes, av) {
   document.querySelector('a[data-ng-click^="showCommentsModal()"]').click();
   document.querySelector('textarea[data-ng-model^="comentariGeneral.comentari"]').value = comentarios;
   await delay(300);
-  //document.querySelector('a[data-ng-click^="saveComentariGeneral()"]').click();
+  document.querySelector('a[data-ng-click^="saveComentariGeneral()"]').click();
 }
 
 function delay(ms) {

@@ -7,7 +7,8 @@ if (!window.__listenerRegistradoSetSelects) {
 
 function handleMessage(message, sender, sendResponse) {
   console.log("Mensaje recibido:", message);
-  modifySelects(message.state, message.force, message.changeDisabled).then(resultado => sendResponse({ resultado }));
+  resultado = modifySelects(message.state, message.force, message.changeDisabled);
+  sendResponse({ resultado })
   return true;
 }
 
