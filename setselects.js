@@ -6,7 +6,6 @@ if (!window.__listenerRegistradoSetSelects) {
 }
 
 function handleMessage(message, sender, sendResponse) {
-  console.log("Mensaje recibido:", message);
   resultado = modifySelects(message.state, message.force, message.changeDisabled);
   sendResponse({ resultado })
   return true;
