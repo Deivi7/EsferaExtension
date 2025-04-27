@@ -1,4 +1,22 @@
 /*
+Quan l'usuari fa clic al botó "Posar nota alumne", 
+el sistema emplena automàticament la nota de l'alumne utilitzant la informació extreta del fitxer JSON 
+(notes enganxades a la zona de text de l'extensió).
+Per defecte, només es modificaran aquells Resultats d'Aprenentatge (RA) que estiguin buits, en procés o pendents.
+Si l'usuari marca l'opció "Forçar" abans de fer clic, totes les avaluacions, independentment del valor que tinguessin prèviament, 
+s'actualitzaran amb les dades de l'extensió.
+
+Notes:
+-Totes les qualificacions buides (“”), és a dir, sense nota assignada, s'actualitzaran a l'Esfer@ a l'estat "pendent".
+-Totes les qualificacions amb "P" (pendent) s'actualitzaran a l'Esfer@ a l'estat "en procés",
+tant a les avaluacions actuals com a les posteriors.
+-S'emplenen les notes de l'avaluació actual i de les avaluacions anteriors que encara no tinguin valor (notes pendents).
+-Si un alumne ja té una nota en una avaluació posterior (per motius com convalidacions, etc.), 
+aquesta nota es marcarà com pendent.
+
+Comentaris:
+-Els comentaris associats es copiaran al camp de comentaris generals del mòdul.
+- Només s'afegiran els comentaris dels Resultats d'Aprenentatge (RA) de l'avaluació actual i els comentaris dels RAs en procés.
 
 */
 
@@ -12,6 +30,7 @@ function handleMessage(message, sender, sendResponse) {
   const { jsonText, studentCode, force, changeDisabled, av } = message;
   resultado = setUserNotes(jsonText, studentCode, force, changeDisabled, av);
   sendResponse({ resultado });
+
   return true; // Necesario para respuestas async
 }
 
@@ -48,7 +67,7 @@ function getQualificacionsTable() {
 async function aplicarComentaris(notes, av) {
 
   const comentarios = notes
-    .filter(entry => entry.av == av && entry.comment?.trim())
+    .filter(entry => (entry.av == av || entry.nota=='P') && entry.comment?.trim())
     .map(
       entry => {
         const raText = entry.ra === 'T' ? '' : ` ${entry.ra}`;
@@ -98,7 +117,7 @@ function aplicarNotesASeleccionats(notes, force, changeDisabled, currentAv) {
     if (ra === "T") {
       aplicarNotaModul(select, input, nota, valorNota, force, isEditable);
     } else {
-      aplicarNotaRA(select, valorNota, force, isEditable);
+      aplicarNotaRA(select, valorNota, force, isEditable, currentAv ,av);
     }
   });
 }
@@ -127,14 +146,14 @@ function aplicarNotaModul(select, input, nota, valor, force, editable) {
 }
 
 
-function aplicarNotaRA(select, valor, force, editable) {
+function aplicarNotaRA(select, valor, force, editable, currentAv, av) {
   const optionExists = Array.from(select.options).some(option => option.value === valor);
 
   if (optionExists && (editable || force)) {
-
-    if(currentAv < av && nota !='P')  {
-      valor = "string:PQ"
+    if(av > currentAv && valor !='string:EP')  {
+      valor = "string:PDT"
     }
+    console.log(valor);
 
     select.value = valor;
     select.dispatchEvent(new Event("change"));

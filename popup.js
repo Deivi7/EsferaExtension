@@ -306,10 +306,10 @@ function generarAvaluacions() {
   // Opcions de les avaluacions possibles
   const evaluations = [
       { label: "Seleciona una avaluació", value: 0 },
-      { label: "Primera avaluació", value: 1 },
-      { label: "Segona avaluació", value: 2 },
-      { label: "Avaluació final", value: 3 },
-      { label: "Avaluació extraordinària", value: 4}
+      { label: "Primera avaluació (1)", value: 1 },
+      { label: "Segona avaluació (2)", value: 2 },
+      { label: "Avaluació final (3)", value: 3 },
+      { label: "Avaluació extraordinària (4)", value: 4}
   ];
 
   const selectElement = document.getElementById('evaluation');
