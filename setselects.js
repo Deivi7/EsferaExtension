@@ -1,4 +1,24 @@
+/**
+- PENDENT: string:PQ
 
+Quan l'usuari fa clic al botó "Tots com a pendent", 
+s'assigna automàticament l'estat "pendent" a totes les avaluacions que no tenen cap valor
+(és a dir, que estan buides).
+
+Si l'usuari marca l'opció "Forçar" abans de fer clic,
+totes les avaluacions, independentment del valor que tinguessin prèviament,
+es modifiquen i passen a tenir l'estat "pendent".
+
+- EN PROCÉS: string:EP
+Quan l'usuari fa clic al botó "Tots en procés", 
+s'assigna automàticament l'estat "en procés" a totes les avaluacions que no tenen cap valor 
+(és a dir, que estan buides).
+
+Si l'usuari marca l'opció "Forçar" abans de fer clic, 
+totes les avaluacions, independentment del valor que tinguessin prèviament, 
+es modifiquen i passen a tenir l'estat "en procés".
+
+**/
 
 if (!window.__listenerRegistradoSetSelects) {
   window.__listenerRegistradoSetSelects = true;
@@ -20,7 +40,7 @@ function modifySelects(state, force, changeDisabled) {
 
   const selects = table.querySelectorAll("select");
   selects.forEach(select => {
-    if (!shouldProcessSelect(select,force, changeDisabled)) return;
+    if (!shouldProcessSelect(select, force, changeDisabled)) return;
 
     updateSelectValue(select, state, force);
     applyPendingIfNeeded(select, force);

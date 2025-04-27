@@ -1,3 +1,7 @@
+/*
+
+*/
+
 if (!window.__listenerRegistradoUserQualificacions) {
   window.__listenerRegistradoUserQualificacions = true;
   chrome.runtime.onMessage.addListener(handleMessage);
@@ -57,7 +61,7 @@ async function aplicarComentaris(notes, av) {
   document.querySelector('a[data-ng-click^="showCommentsModal()"]').click();
   document.querySelector('textarea[data-ng-model^="comentariGeneral.comentari"]').value = comentarios;
   await delay(300);
-  document.querySelector('a[data-ng-click^="saveComentariGeneral()"]').click();
+  //document.querySelector('a[data-ng-click^="saveComentariGeneral()"]').click();
 }
 
 function delay(ms) {
