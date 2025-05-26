@@ -1,5 +1,5 @@
 
-const changeDisabled = true;
+const changeDisabled = false;
 
 let studentCode = "";
 let studentName = "";
