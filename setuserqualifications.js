@@ -27,14 +27,14 @@ if (!window.__listenerRegistradoUserQualificacions) {
 
 function handleMessage(message, sender, sendResponse) {
 
-  const { jsonText, studentCode, force, changeDisabled, av } = message;
-  resultado = setUserNotes(jsonText, studentCode, force, changeDisabled, av);
+  const { jsonText, studentCode, force, changeDisabled, av, autoCloseComment, autoCloseAlumnes } = message;
+  resultado = setUserNotes(jsonText, studentCode, force, changeDisabled, av, autoCloseComment, autoCloseAlumnes);
   sendResponse({ resultado });
 
   return true; // Necesario para respuestas async
 }
 
-async function setUserNotes(jsonText, studentCode, force, changeDisabled, av) {
+async function setUserNotes(jsonText, studentCode, force, changeDisabled, av, autoCloseComment, autoCloseAlumnes) {
  
   const jsonData = parseJSON(jsonText);
   if (!jsonData) return "Error en analitzar el JSON. Assegura't que estigui en el format correcte.";
@@ -47,7 +47,10 @@ async function setUserNotes(jsonText, studentCode, force, changeDisabled, av) {
 
   actualizarIdsDeSelectsYInputs(table);
   aplicarNotesASeleccionats(student.notes, force, changeDisabled, av);
-  await aplicarComentaris(student.notes, av);
+  await aplicarComentaris(student.notes, av, autoCloseComment);
+  if(autoCloseAlumnes){
+    cerrarAlumnes();
+  }
 
   return `Notes de l'alumne ${student.nomalu} assignades`;
 }
@@ -64,7 +67,7 @@ function getQualificacionsTable() {
   return document.querySelector('table[data-st-table="qualificacions"]');
 }
 
-async function aplicarComentaris(notes, av) {
+async function aplicarComentaris(notes, av, autoCloseComment) {
 
   const comentarios = notes
     .filter(entry => (entry.av == av || entry.nota=='P') && entry.comment?.trim())
@@ -80,7 +83,14 @@ async function aplicarComentaris(notes, av) {
   document.querySelector('a[data-ng-click^="showCommentsModal()"]').click();
   document.querySelector('textarea[data-ng-model^="comentariGeneral.comentari"]').value = comentarios;
   await delay(300);
-  //document.querySelector('a[data-ng-click^="saveComentariGeneral()"]').click();
+  if(autoCloseComment){
+    const saveBtn = document.querySelector('a[data-ng-click^="saveComentariGeneral()"]');
+    if(saveBtn){ saveBtn.click(); }
+  }
+}
+
+function cerrarAlumnes(){
+  // Por implementar
 }
 
 function delay(ms) {

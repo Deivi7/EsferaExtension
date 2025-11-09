@@ -1,5 +1,7 @@
 
-const changeDisabled = false;
+let changeDisabled = true;
+let autoCloseComment = false;
+let autoCloseAlumnes = false;
 
 let studentCode = "";
 let studentName = "";
@@ -14,6 +16,9 @@ async function initExtension() {
   cargarInfoApp();
   extraerInformacionDesdeEsfera(tab.id);
   generarAvaluacions(); 
+  await cargarOpciones();
+  inicializarUIOpciones();
+  wireSettingsUI();
 }
 
 async function getActiveTab() {
@@ -32,6 +37,58 @@ function cargarInfoApp() {
     savedData = result.av;
     document.getElementById("evaluation").value = savedData;
   });
+}
+
+async function cargarOpciones(){
+  return new Promise((resolve)=>{
+    chrome.storage.sync.get(["changeDisabled","autoCloseComment","autoCloseAlumnes"], (result)=>{
+      changeDisabled = result.changeDisabled ?? true;
+      autoCloseComment = result.autoCloseComment ?? false;
+      autoCloseAlumnes = result.autoCloseAlumnes ?? false;
+      resolve();
+    });
+  });
+}
+
+function inicializarUIOpciones(){
+  const elChange = document.getElementById("optChangeDisabled");
+  const elComment = document.getElementById("optAutoCloseComment");
+  const elAlumnes = document.getElementById("optAutoCloseAlumnes");
+  if(elChange) elChange.checked = !!changeDisabled;
+  if(elComment) elComment.checked = !!autoCloseComment;
+  if(elAlumnes) elAlumnes.checked = !!autoCloseAlumnes;
+}
+
+function wireSettingsUI(){
+  const btn = document.getElementById("settingsBtn");
+  const panel = document.getElementById("settingsPanel");
+  if(btn && panel){
+    btn.addEventListener("click", ()=>{
+      panel.style.display = panel.style.display === "none" ? "block" : "none";
+    });
+  }
+
+  const elChange = document.getElementById("optChangeDisabled");
+  const elComment = document.getElementById("optAutoCloseComment");
+  const elAlumnes = document.getElementById("optAutoCloseAlumnes");
+  if(elChange){
+    elChange.addEventListener("change", ()=>{
+      changeDisabled = elChange.checked;
+      chrome.storage.sync.set({ changeDisabled });
+    });
+  }
+  if(elComment){
+    elComment.addEventListener("change", ()=>{
+      autoCloseComment = elComment.checked;
+      chrome.storage.sync.set({ autoCloseComment });
+    });
+  }
+  if(elAlumnes){
+    elAlumnes.addEventListener("change", ()=>{
+      autoCloseAlumnes = elAlumnes.checked;
+      chrome.storage.sync.set({ autoCloseAlumnes });
+    });
+  }
 }
 
 function extraerInformacionDesdeEsfera(tabId) {
@@ -134,11 +191,13 @@ document.getElementById("setUserNotes").addEventListener("click", async() => {
     target: { tabId: tab.id },
     files: ["setuserqualifications.js"]
   }).then(() => {
-      chrome.tabs.sendMessage(tab.id, { jsonText: getJsonText(), 
-                                        studentCode:studentCode, 
-                                        force: getForceUserQualifications(), 
-                                        changeDisabled:changeDisabled, 
-                                        av: getAv() 
+      chrome.tabs.sendMessage(tab.id, { jsonText: getJsonText(),
+                                        studentCode:studentCode,
+                                        force: getForceUserQualifications(),
+                                        changeDisabled:changeDisabled,
+                                        av: getAv(),
+                                        autoCloseComment:autoCloseComment,
+                                        autoCloseAlumnes:autoCloseAlumnes
       }, (response) => {
         document.getElementById("results").textContent = response.resultado;
       });

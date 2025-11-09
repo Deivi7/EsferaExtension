@@ -27,6 +27,18 @@ body {
     margin-bottom: 5px;
     align-items: baseline;
 }
+.settings-btn{
+    margin-left: auto;
+    padding: 0 4px;
+    text-decoration: none;
+}
+.settings-panel{
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 6px;
+}
 .content {
     display: flex;
     gap: 0px;
