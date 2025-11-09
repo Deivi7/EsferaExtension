@@ -125,7 +125,7 @@ function aplicarNotesASeleccionats(notes, force, changeDisabled, currentAv) {
     const isEditable = !select.value || ["string:EP", "string:PDT", "string:PQ"].includes(select.value);
 
     if (ra === "T") {
-      aplicarNotaModul(select, input, nota, valorNota, force, isEditable, currentAv);
+      aplicarNotaModul(select, input, nota, valorNota, force, isEditable, currentAv ,av);
     } else {
       aplicarNotaRA(select, valorNota, force, isEditable, currentAv ,av);
     }
@@ -139,8 +139,14 @@ function calcularValorNota(nota, ra) {
   return nota < 5 ? "string:NA" : `string:A${nota}`;
 }
 
-function aplicarNotaModul(select, input, nota, valor, force, editable, currentAv) {
-  if (currentAv != 4)  return
+function aplicarNotaModul(select, input, nota, valor, force, editable, currentAv, av) {
+
+  if (av === "" || ( nota === "" && (editable || force) && (!input.value || force)) ||av > currentAv ) {
+    select.value = "string:PQ";
+    select.dispatchEvent(new Event("change"));
+  }
+
+  if (av == "" || nota == "" || currentAv == "" ||av > currentAv)  return
   
   if (nota !== "" && (editable || force) && (!input.value || force)) {
     select.value = valor;
@@ -149,11 +155,7 @@ function aplicarNotaModul(select, input, nota, valor, force, editable, currentAv
     input.dispatchEvent(new Event("change"));
   }
 
-
-  if (nota === "" && (editable || force) && (!input.value || force)) {
-    select.value = "string:PQ";
-    select.dispatchEvent(new Event("change"));
-  }
+  
 }
 
 
