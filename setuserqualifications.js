@@ -81,8 +81,12 @@ async function aplicarComentaris(notes, av, autoCloseComment) {
 
 
   document.querySelector('a[data-ng-click^="showCommentsModal()"]').click();
-  document.querySelector('textarea[data-ng-model^="comentariGeneral.comentari"]').value = comentarios;
+  let textarea = document.querySelector('textarea[data-ng-model^="comentariGeneral.comentari"]')
+  textarea.value = comentarios;
+  textarea.dispatchEvent(new Event("change"));
+  
   await delay(300);
+  
   if(autoCloseComment){
     const saveBtn = document.querySelector('a[data-ng-click^="saveComentariGeneral()"]');
     if(saveBtn){ saveBtn.click(); }
